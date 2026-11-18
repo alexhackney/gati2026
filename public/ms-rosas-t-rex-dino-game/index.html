@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ms Rosa's T-Rex Dino Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+<!-- Local libs (work offline, served from /_lib/). Add three.min.js via @@HEAD when 3D is wanted. -->
+<link rel="stylesheet" href="/_lib/animate.min.css">
+<script src="/_lib/tailwind.js"></script>
+<script src="/_lib/gsap.min.js"></script>
+<script src="/_lib/three.min.js"></script>
+
+<style>
+:root{--a:#7c3aed;--b:#ec4899;--c:#f59e0b;--ink:#2e1065}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:Fredoka,system-ui,sans-serif;color:var(--ink);display:flex;flex-direction:column;overflow:hidden;
+  background:linear-gradient(135deg,#fde68a,#fbcfe8,#c4b5fd,#a5f3fc);background-size:300% 300%;animation:bg 14s ease infinite}
+@keyframes bg{50%{background-position:100% 100%}}
+header{background:linear-gradient(90deg,var(--a),var(--b));color:#fff;text-align:center;padding:1.2vh 2vw;font-size:clamp(32px,5.5vh,64px);font-weight:700;text-shadow:0 4px 0 rgba(0,0,0,.25);text-transform:capitalize;z-index:2}
+header span{display:inline-block;animation:wob 2s ease-in-out infinite}
+@keyframes wob{50%{transform:rotate(12deg) scale(1.2)}}
+main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh;padding:2vh 3vw;position:relative;z-index:1;text-align:center}
+/* ---- BIG BUTTONS: use class="btn" ---- */
+.btn{font:700 clamp(28px,5vh,56px) Fredoka,system-ui,sans-serif;color:#fff;background:linear-gradient(180deg,var(--b),var(--a));border:0;border-radius:999px;padding:.4em 1.1em;cursor:pointer;box-shadow:0 8px 0 rgba(0,0,0,.25);transition:transform .1s;animation:pop 2.4s ease-in-out infinite}
+.btn:hover{transform:scale(1.08) rotate(-2deg)}.btn:active{transform:translateY(6px) scale(.97);box-shadow:0 2px 0 rgba(0,0,0,.25)}
+@keyframes pop{50%{transform:scale(1.04)}}
+.shake{animation:shk .5s}@keyframes shk{25%{transform:translateX(-14px) rotate(-3deg)}75%{transform:translateX(14px) rotate(3deg)}}
+.bounce{animation:bnc .6s}@keyframes bnc{40%{transform:translateY(-40px) scale(1.2)}}
+.spin{animation:spn .8s}@keyframes spn{to{transform:rotate(360deg)}}
+footer{background:rgba(46,16,101,.9);color:#fff;text-align:center;padding:1vh 2vw;font-size:clamp(16px,2.4vh,28px);z-index:2}
+/* ---- BLING layer ---- */
+#fx{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+.float{position:fixed;bottom:-80px;font-size:48px;opacity:.55;animation:fl linear forwards;pointer-events:none;z-index:0}
+@keyframes fl{to{transform:translateY(-120vh) rotate(360deg)}}
+#game{position:relative;width:min(96vw,1500px);height:72vh;border-radius:30px;overflow:hidden;border:8px solid #fff;box-shadow:0 10px 0 rgba(0,0,0,.25)}
+#game canvas{display:block;width:100%;height:100%}
+.hud{position:absolute;font:700 clamp(22px,3.4vh,40px) Fredoka,sans-serif;color:#fff;text-shadow:0 3px 0 #0006;pointer-events:none}
+#gasbox{left:16px;top:12px;background:#0008;padding:8px 16px;border-radius:20px}
+#gasbar{width:min(28vw,360px);height:28px;background:#333;border-radius:14px;overflow:hidden;margin-top:4px;border:3px solid #fff}
+#gasfill{height:100%;width:100%;background:linear-gradient(90deg,#22c55e,#facc15);transition:width .1s}
+#spd{right:16px;top:12px;background:#0008;padding:8px 16px;border-radius:20px}
+#msg{left:0;right:0;top:30%;text-align:center;font-size:clamp(34px,7vh,80px);line-height:1.15}
+#msg small{display:block;font-size:.5em}
+#dash{position:absolute;left:0;right:0;bottom:0;height:20%;background:linear-gradient(#1f2937,#0b1020);border-top:6px solid #f43f5e;pointer-events:none}
+#wheel{position:absolute;left:50%;bottom:-40%;width:min(34vh,300px);height:min(34vh,300px);margin-left:calc(min(34vh,300px)/-2);border:18px solid #111;border-radius:50%;box-shadow:inset 0 0 0 6px #f43f5e;transition:transform .1s}
+#wheel:before{content:'';position:absolute;left:50%;top:0;bottom:0;width:14px;margin-left:-7px;background:#111}
+#back{position:absolute;right:16px;bottom:22%;pointer-events:auto;font-size:clamp(24px,4vh,44px)}
+#hint{position:absolute;left:16px;bottom:22%;background:#0008;padding:6px 14px;border-radius:16px;font-size:clamp(18px,2.6vh,30px)}
+#warn{left:0;right:0;top:14%;text-align:center;color:#fde047;font-size:clamp(30px,6vh,64px);display:none}
+#flash{position:absolute;inset:0;background:#f43f5e;opacity:0;pointer-events:none}
+
+</style>
+</head>
+<body>
+<header><span>🌟</span> Ms Rosa's T-Rex Dino Game <span>🌟</span></header>
+<main id="stage">
+  <!-- BUILD THE SITE HERE: big canvas area -->
+  <div id="canvas" style="flex:1;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh"><div id="game">
+  <div id="gasbox" class="hud">⛽ GAS<div id="gasbar"><div id="gasfill"></div></div></div>
+  <div id="spd" class="hud">🚗 <span id="spdn">0</span></div>
+  <div id="warn" class="hud animate__animated animate__flash animate__infinite">⛽ LOW GAS!</div>
+  <div id="msg" class="hud"></div>
+  <div id="flash"></div>
+  <div id="hint" class="hud">⬆️ go &nbsp;⬅️➡️ steer &nbsp;⬇️ brake</div>
+  <button id="back" class="btn" style="background:#a855f7;color:#fff;padding:.3em .8em;border-radius:24px;border:4px solid #fff;font-family:Fredoka">👀 LOOK BACK (Space)</button>
+  <div id="dash"><div id="wheel"></div></div>
+</div>
+</div>
+</main>
+<footer>Built live with AI at PAMS - Great American Teach-In 2026</footer>
+<div id="fx"></div>
+
+<script>
+/* ===== BLING KIT (keep! call these from your code) =====
+ confetti(x?,y?)  burst of confetti      beep(freq?,ms?)   happy sound
+ tune([notes])    play note list         floaty(['🦖','🎈']) emoji rise in background
+ wiggle(el,'shake'|'bounce'|'spin')       say('text')       speech bubble toast
+ Sparkle cursor trail is automatic; every .btn click auto-plays pop + confetti. */
+const $=s=>document.querySelector(s), fx=$('#fx');
+let _ac; function beep(f=660,ms=120,type='sine'){try{_ac=_ac||new (window.AudioContext||window.webkitAudioContext)();
+  const o=_ac.createOscillator(),g=_ac.createGain();o.type=type;o.frequency.value=f;g.gain.value=.15;o.connect(g);g.connect(_ac.destination);
+  o.start();g.gain.exponentialRampToValueAtTime(.001,_ac.currentTime+ms/1000);o.stop(_ac.currentTime+ms/1000)}catch(e){}}
+function tune(n=[523,659,784,1047]){n.forEach((f,i)=>setTimeout(()=>beep(f,180,'triangle'),i*130))}
+function confetti(x=innerWidth/2,y=innerHeight/2,n=40){const C=['#ef4444','#f59e0b','#10b981','#3b82f6','#a855f7','#ec4899'];
+  for(let i=0;i<n;i++){const d=document.createElement('div'),a=Math.random()*6.28,v=150+Math.random()*350;
+    d.style.cssText=`position:absolute;left:${x}px;top:${y}px;width:12px;height:18px;background:${C[i%6]};border-radius:3px`;fx.appendChild(d);
+    d.animate([{transform:'translate(0,0) rotate(0)',opacity:1},{transform:`translate(${Math.cos(a)*v}px,${Math.sin(a)*v+300}px) rotate(${Math.random()*900}deg)`,opacity:0}],{duration:1200+Math.random()*600,easing:'cubic-bezier(.2,.7,.3,1)'}).onfinish=()=>d.remove()}}
+function floaty(list=['⭐','🎈','🌈','🦋']){setInterval(()=>{const e=document.createElement('div');e.className='float';e.textContent=list[Math.random()*list.length|0];
+  e.style.left=Math.random()*95+'vw';e.style.animationDuration=(7+Math.random()*6)+'s';document.body.appendChild(e);setTimeout(()=>e.remove(),14000)},900)}
+function wiggle(el,c='shake'){el.classList.remove(c);void el.offsetWidth;el.classList.add(c);setTimeout(()=>el.classList.remove(c),900)}
+function say(t,ms=2500){const d=document.createElement('div');d.textContent=t;d.style.cssText='position:fixed;top:14vh;left:50%;transform:translateX(-50%);background:#fff;color:#4c1d95;font:700 clamp(28px,5vh,56px) Fredoka;padding:.4em .9em;border-radius:30px;box-shadow:0 8px 0 rgba(0,0,0,.2);z-index:60';
+  document.body.appendChild(d);d.animate([{transform:'translateX(-50%) scale(.3)'},{transform:'translateX(-50%) scale(1.1)'},{transform:'translateX(-50%) scale(1)'}],{duration:300});setTimeout(()=>d.remove(),ms)}
+addEventListener('pointermove',e=>{if(Math.random()>.35)return;const s=document.createElement('div');s.textContent=['✨','⭐','💫'][Math.random()*3|0];
+  s.style.cssText=`position:absolute;left:${e.clientX}px;top:${e.clientY}px;font-size:28px`;fx.appendChild(s);
+  s.animate([{transform:'scale(1)',opacity:1},{transform:'translateY(40px) scale(.2)',opacity:0}],{duration:700}).onfinish=()=>s.remove()});
+addEventListener('click',e=>{if(e.target.closest('.btn')){beep(500+Math.random()*500,100);confetti(e.clientX,e.clientY,18)}});
+floaty();
+/* ===== YOUR CODE BELOW ===== */
+(function(){
+const gameEl=$('#game');
+const W=()=>gameEl.clientWidth, H=()=>gameEl.clientHeight;
+const renderer=new THREE.WebGLRenderer({antialias:false});
+renderer.setPixelRatio(1);renderer.setSize(W(),H());
+gameEl.insertBefore(renderer.domElement,gameEl.firstChild);
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x87ceeb);
+scene.fog=new THREE.Fog(0x87ceeb,60,260);
+const cam=new THREE.PerspectiveCamera(75,W()/H(),0.1,400);
+cam.position.set(0,1.8,0);cam.rotation.order='YXZ';
+scene.add(new THREE.HemisphereLight(0xffffff,0x6aa84f,0.95));
+const sun=new THREE.DirectionalLight(0xffffff,0.7);sun.position.set(30,60,20);scene.add(sun);
+addEventListener('resize',()=>{renderer.setSize(W(),H());cam.aspect=W()/H();cam.updateProjectionMatrix()});
+
+const M=(c)=>new THREE.MeshStandardMaterial({color:c,roughness:.8});
+const mesh=(g,c,x=0,y=0,z=0)=>{const m=new THREE.Mesh(g,M(c));m.position.set(x,y,z);return m};
+
+// ground + road follow the car
+const ground=mesh(new THREE.PlaneGeometry(900,900),0x4ade80);ground.rotation.x=-Math.PI/2;scene.add(ground);
+const road=mesh(new THREE.PlaneGeometry(24,900),0x4b5563,0,0.05,0);road.rotation.x=-Math.PI/2;scene.add(road);
+const dashes=[];
+for(let i=0;i<30;i++){const d=mesh(new THREE.BoxGeometry(0.6,0.05,5),0xffffff,0,0.1,-i*20);scene.add(d);dashes.push(d)}
+
+// builders
+function tree(){const g=new THREE.Group();
+  g.add(mesh(new THREE.CylinderGeometry(.5,.7,3,8),0x92400e,0,1.5,0));
+  g.add(mesh(new THREE.ConeGeometry(2.6,4,8),0x16a34a,0,4.5,0));
+  g.add(mesh(new THREE.ConeGeometry(2,3.4,8),0x22c55e,0,6.5,0));return g}
+function dino(color){const g=new THREE.Group();
+  g.add(mesh(new THREE.SphereGeometry(1.5,12,10),color,0,2.2,0));
+  g.add(mesh(new THREE.SphereGeometry(.9,12,10),color,0,3.6,-1.4));
+  g.add(mesh(new THREE.SphereGeometry(.15,6,6),0x111111,.45,3.9,-2.1));
+  g.add(mesh(new THREE.SphereGeometry(.15,6,6),0x111111,-.45,3.9,-2.1));
+  const tail=mesh(new THREE.ConeGeometry(.8,2.6,8),color,0,2,2.2);tail.rotation.x=Math.PI/2;g.add(tail);
+  for(const s of [-1,1]){g.add(mesh(new THREE.CylinderGeometry(.35,.35,1.4,6),color,s*.8,.7,.3));}
+  for(let i=0;i<3;i++)g.add(mesh(new THREE.ConeGeometry(.35,.7,4),0xfacc15,0,3.5-i*.1,.2+i*.8));
+  g.rotation.y=Math.PI;return g}
+function fallenTree(){const g=new THREE.Group();const t=tree();t.rotation.x=Math.PI/2;t.position.set(0,2.4,-3.5);t.scale.setScalar(.9);g.add(t);return g}
+const eye=(g,x,y,z)=>g.add(mesh(new THREE.SphereGeometry(.14,6,6),0x111111,x,y,z));
+function bronto(c){const g=new THREE.Group();
+  g.add(mesh(new THREE.SphereGeometry(1.9,12,10),c,0,2.6,0));
+  const neck=mesh(new THREE.CylinderGeometry(.5,.8,4.5,8),c,0,5,-1.2);neck.rotation.x=-.25;g.add(neck);
+  g.add(mesh(new THREE.SphereGeometry(.8,10,8),c,0,7.4,-1.9));eye(g,.4,7.6,-2.6);eye(g,-.4,7.6,-2.6);
+  const tail=mesh(new THREE.ConeGeometry(.9,4,8),c,0,2.3,3.2);tail.rotation.x=Math.PI/2;g.add(tail);
+  for(const x of [-1,1])for(const z of [-.8,1])g.add(mesh(new THREE.CylinderGeometry(.45,.45,1.6,6),c,x,.8,z));
+  g.rotation.y=Math.PI;return g}
+function trike(c){const g=new THREE.Group();
+  g.add(mesh(new THREE.SphereGeometry(1.7,12,10),c,0,2,0.3));
+  g.add(mesh(new THREE.SphereGeometry(1,12,10),c,0,2.3,-1.8));
+  const fr=mesh(new THREE.CylinderGeometry(1.7,1.7,.3,14),0xf472b6,0,3,-1.3);fr.rotation.x=1.2;g.add(fr);
+  for(const x of [-1,1]){const h=mesh(new THREE.ConeGeometry(.25,1.4,6),0xfffbeb,x*.6,3.1,-2.8);h.rotation.x=-1.1;g.add(h);eye(g,x*.7,2.6,-2.6)}
+  const nose=mesh(new THREE.ConeGeometry(.2,.8,6),0xfffbeb,0,2.5,-3);nose.rotation.x=-1.4;g.add(nose);
+  const tail=mesh(new THREE.ConeGeometry(.7,2.4,8),c,0,1.8,2.3);tail.rotation.x=Math.PI/2;g.add(tail);
+  for(const x of [-1,1])for(const z of [-.7,1.1])g.add(mesh(new THREE.CylinderGeometry(.4,.4,1.2,6),c,x,.6,z));
+  g.rotation.y=Math.PI;return g}
+function stego(c){const g=new THREE.Group();
+  g.add(mesh(new THREE.SphereGeometry(1.8,12,10),c,0,2.3,0));
+  g.add(mesh(new THREE.SphereGeometry(.7,10,8),c,0,1.8,-2.1));eye(g,.35,2,-2.6);eye(g,-.35,2,-2.6);
+  for(let i=0;i<5;i++)g.add(mesh(new THREE.ConeGeometry(.7,1.5-Math.abs(i-2)*.25,4),i%2?0xfacc15:0xef4444,0,4.2-Math.abs(i-2)*.3,-1.2+i*.7));
+  const tail=mesh(new THREE.ConeGeometry(.7,2.6,8),c,0,1.9,2.5);tail.rotation.x=Math.PI/2;g.add(tail);
+  for(const x of [-1,1])for(const z of [-.7,1])g.add(mesh(new THREE.CylinderGeometry(.4,.4,1.2,6),c,x,.6,z));
+  g.rotation.y=Math.PI;return g}
+function raptor(c){const g=new THREE.Group();
+  g.add(mesh(new THREE.SphereGeometry(1,12,10),c,0,2.2,0));
+  g.add(mesh(new THREE.SphereGeometry(.6,10,8),c,0,3.3,-.9));eye(g,.25,3.5,-1.4);eye(g,-.25,3.5,-1.4);
+  const tail=mesh(new THREE.ConeGeometry(.45,3,8),c,0,2,2);tail.rotation.x=Math.PI/2;g.add(tail);
+  for(const x of [-1,1])g.add(mesh(new THREE.CylinderGeometry(.25,.25,1.6,6),c,x*.5,.8,.2));
+  g.rotation.y=Math.PI;return g}
+function gascan(){const g=new THREE.Group();
+  g.add(mesh(new THREE.BoxGeometry(1.8,2.2,1.2),0xef4444,0,1.4,0));
+  g.add(mesh(new THREE.BoxGeometry(.6,.5,.6),0xfacc15,.5,2.7,0));
+  g.add(mesh(new THREE.BoxGeometry(1,1,.1),0xffffff,0,1.5,.65));
+  const glow=new THREE.Mesh(new THREE.SphereGeometry(2.4,12,10),new THREE.MeshBasicMaterial({color:0xfde047,transparent:true,opacity:.3}));glow.position.y=1.5;g.add(glow);
+  return g}
+function trex(){const g=new THREE.Group();const C=0x7c3aed;
+  g.add(mesh(new THREE.SphereGeometry(2.6,14,12),C,0,4.5,0));
+  g.add(mesh(new THREE.SphereGeometry(1.7,14,12),C,0,7.4,-2));
+  g.add(mesh(new THREE.BoxGeometry(2,1,2),C,0,6.9,-3.6));
+  for(const s of [-1,1]){
+    g.add(mesh(new THREE.SphereGeometry(.4,8,8),0xffffff,s*.8,8.2,-3));
+    g.add(mesh(new THREE.SphereGeometry(.2,8,8),0x111111,s*.8,8.2,-3.3));
+    g.add(mesh(new THREE.CylinderGeometry(.9,.9,3.2,8),C,s*1.4,1.6,.3));
+    const arm=mesh(new THREE.BoxGeometry(.4,.4,1.4),C,s*2.2,5,-1.8);g.add(arm);
+  }
+  const tail=mesh(new THREE.ConeGeometry(1.6,6,10),C,0,4,4.6);tail.rotation.x=Math.PI/2;g.add(tail);
+  for(let i=0;i<4;i++)g.add(mesh(new THREE.ConeGeometry(.5,1,4),0x22c55e,0,7.1-i*.7+(i>1?-.5:0)*0,-0.5+i*1.5));
+  g.rotation.y=0;return g}
+
+// objects
+const objs=[];
+function rx(o){return o.kind==='tree'?(Math.random()<.5?-1:1)*(11.5+Math.random()*1.5):(Math.random()*2-1)*(o.kind==='gas'?8:9)}
+function place(o,z0){o.mesh.position.z=z0;o.mesh.position.x=(Math.random()*2-1)*(o.kind==='gas'?8:9);o.hit=0}
+const FAR=-1;
+function add(kind,mk,r,count,spread){for(let i=0;i<count;i++){const m=mk();scene.add(m);objs.push({kind,mesh:m,r,spread,hit:0,vx:0,ph:Math.random()*6})}}
+add('tree',fallenTree,3,14,160);
+const COL=[0x22d3ee,0xf472b6,0xfb923c,0x84cc16,0xfacc15,0x60a5fa];
+const DK=[dino,bronto,trike,stego,raptor];
+for(let i=0;i<12;i++){const b=DK[i%DK.length],c=COL[(i*5+1)%COL.length];add('dino',()=>b(c),2.4,1,200)}
+add('gas',gascan,2.3,2,430);
+const sideTrees=[];
+for(let i=0;i<40;i++){const t=tree();t.scale.setScalar(1+Math.random()*.8);scene.add(t);sideTrees.push(t)}
+
+// state
+let car,gas,speed,gap,steer,lookBack,yaw,state,shake,dist;
+const keys={};
+const trexM=trex();trexM.scale.setScalar(1.3);scene.add(trexM);
+const MAXV=34,TREXV=19;
+function reset(){
+  car={x:0,z:0};gas=100;speed=0;gap=32;steer=0;yaw=0;dist=0;shake=0;
+  objs.forEach((o,i)=>{o.mesh.position.z=-60-Math.random()*o.spread-i*3;o.mesh.position.x=rx(o);o.mesh.rotation.z=0;o.mesh.position.y=0;o.hit=0});
+  sideTrees.forEach((t,i)=>{t.position.set((i%2?1:-1)*(15+Math.random()*25),0,-i*14)});
+  state='ready';
+  showMsg('🦖 A T-Rex wants a ride!<small>Press ⬆️ to drive away!</small>');
+}
+const msgEl=$('#msg');
+function showMsg(h){msgEl.innerHTML=h;msgEl.style.display=h?'block':'none'}
+function setSpd(v){$('#spdn').textContent=Math.round(v*3)+' mph'}
+
+addEventListener('keydown',e=>{
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();
+  keys[e.key]=true;
+  if(e.key==='b'||e.key==='B')keys[' ']=true;
+  if(state==='ready'&&e.key==='ArrowUp'){state='play';showMsg('');tune([523,659,784])}
+  if(state==='caught'&&(e.key==='Enter'||e.key==='ArrowUp'))reset();
+});
+addEventListener('keyup',e=>{keys[e.key]=false;if(e.key==='b'||e.key==='B')keys[' ']=false});
+const back=$('#back');
+back.addEventListener('pointerdown',e=>{keys[' ']=true});
+['pointerup','pointerleave','pointercancel'].forEach(ev=>back.addEventListener(ev,()=>{keys[' ']=false}));
+
+function bump(o){
+  speed*=.35;shake=.5;beep(150,200,'square');
+  o.hit=1.2;o.vx=(o.mesh.position.x>car.x?1:-1)*14;
+  const f=$('#flash');f.style.opacity=.5;setTimeout(()=>f.style.opacity=0,150);
+  say(o.kind==='tree'?'🌳 Boing!':'🦕 Oops, sorry dino!',1200);
+}
+
+let last=performance.now();
+function loop(now){
+  requestAnimationFrame(loop);
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(state==='play'){
+    // gas + speed
+    if(gas>0){
+      if(keys.ArrowUp)speed+=22*dt;
+      else speed=Math.max(14,speed-4*dt);
+      if(keys.ArrowDown)speed=Math.max(0,speed-30*dt);
+      gas=Math.max(0,gas-(2.2+speed*.07)*dt);
+    }else{
+      speed=Math.max(0,speed-9*dt);
+    }
+    speed=Math.min(MAXV,speed);
+    const tgt=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0);
+    steer+=(tgt-steer)*Math.min(1,8*dt);
+    car.x=Math.max(-10,Math.min(10,car.x+steer*dt*(6+speed*.35)));
+    car.z-=speed*dt;dist+=speed*dt;
+    gap=Math.min(48,gap+(speed-TREXV)*dt);
+    // objects
+    for(const o of objs){
+      const p=o.mesh.position;
+      if(o.hit>0){o.hit-=dt;p.x+=o.vx*dt;o.mesh.rotation.z+=dt*6;p.y+=dt*2;
+        if(o.hit<=0){o.mesh.rotation.z=0;p.y=0;}}
+      if(o.kind==='dino'&&o.hit<=0){p.x+=Math.sin(now/700+o.ph)*3*dt}
+      if(o.kind==='gas')o.mesh.rotation.y+=dt*2;
+      if(p.z>car.z+15){p.z=car.z-170-Math.random()*o.spread;p.x=rx(o);p.y=0;o.mesh.rotation.z=0;o.hit=0}
+      if(o.hit<=0){
+        const dx=p.x-car.x,dz=p.z-car.z;
+        if(dx*dx+dz*dz<(o.r+1.2)**2){
+          if(o.kind==='gas'){gas=Math.min(100,gas+35);p.z=car.z-170-Math.random()*o.spread;p.x=rx(o);
+            beep(880,150,'triangle');setTimeout(()=>beep(1175,200,'triangle'),120);confetti(innerWidth/2,innerHeight/2,30);say('⛽ Yum! Gas!',1000)}
+          else{bump(o);gap=Math.max(0,gap-5)}
+        }
+      }
+    }
+    // caught?
+    if(gap<=4){
+      state='caught';speed=0;
+      showMsg('🦖💜 The T-Rex gave you a big hug!<small>Press ⬆️ to try again</small>');
+      tune([392,330,262]);confetti();
+    }
+    // out of gas message
+    if(gas<=0&&speed<1&&state==='play'){}
+    $('#gasfill').style.width=gas+'%';
+    $('#gasfill').style.background=gas<25?'#ef4444':'linear-gradient(90deg,#22c55e,#facc15)';
+    $('#warn').style.display=gas<25?'block':'none';
+    $('#warn').textContent=gas<=0?'⛽ OUT OF GAS! The T-Rex is coming!':'⛽ LOW GAS!';
+    setSpd(speed);
+    $('#wheel').style.transform='rotate('+(steer*60)+'deg)';
+  }
+  // trex follows
+  trexM.position.set(car.x*.9+Math.sin(now/500)*1.5,Math.abs(Math.sin(now/120))*1.2,car.z+gap);
+  trexM.rotation.z=Math.sin(now/120)*.08;
+  // world follows
+  ground.position.z=car.z;road.position.z=car.z;
+  dashes.forEach(d=>{if(d.position.z>car.z+10)d.position.z-=600});
+  sideTrees.forEach(t=>{if(t.position.z>car.z+15)t.position.z-=560});
+  // camera
+  const wantYaw=keys[' ']?Math.PI:0;
+  yaw+=(wantYaw-yaw)*Math.min(1,10*dt);
+  shake=Math.max(0,shake-dt);
+  cam.position.set(car.x+(Math.random()-.5)*shake*.6,1.8+(Math.random()-.5)*shake*.6,car.z);
+  cam.rotation.y=yaw;cam.rotation.z=-steer*.06*(Math.cos(yaw));
+  renderer.render(scene,cam);
+}
+reset();
+requestAnimationFrame(loop);
+})();
+
+</script>
+</body>
+</html>
