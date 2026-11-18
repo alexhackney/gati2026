@@ -5,7 +5,7 @@ A class folder is any directory in public/ containing an index.html.
 Its title is taken from the <title> tag of that index.html.
 Run from anywhere:  python3 scripts/build-index.py
 """
-import html, re
+import html, json, re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent / "public"
@@ -17,18 +17,30 @@ def title_of(page: Path, fallback: str) -> str:
     return html.unescape(m.group(1).strip()) if m and m.group(1).strip() else fallback
 
 
+def grade_of(folder: Path):
+    """Grade from <class>/meta.json ({"grade": 3}); None if absent."""
+    try:
+        return int(json.loads((folder / "meta.json").read_text())["grade"])
+    except Exception:
+        return None
+
+
 classes = []
 for d in sorted(ROOT.iterdir()):
     if d.is_dir() and not d.name.startswith((".", "_")) and d.name not in SKIP and (d / "index.html").exists():
-        classes.append((d.name, title_of(d / "index.html", d.name.replace("-", " ").title())))
+        classes.append((d.name, title_of(d / "index.html", d.name.replace("-", " ").title()), grade_of(d)))
+
+# lowest grade first, classes without a grade last, then alphabetical by title
+classes.sort(key=lambda c: (c[2] is None, c[2] or 0, c[1].lower()))
 
 cards = "\n".join(
     f'      <a class="card" style="--i:{i}" href="{html.escape(n)}/">'
     f'<span class="num">{i + 1:02d}.</span>'
-    f'<strong>{html.escape(t)}</strong>'
+    + (f'<span class="grade">Grade {g}</span>' if g else '')
+    + f'<strong>{html.escape(t)}</strong>'
     f'<code>/{html.escape(n)}/</code>'
     f'<span class="go">open &rarr;</span></a>'
-    for i, (n, t) in enumerate(classes)
+    for i, (n, t, g) in enumerate(classes)
 ) or '      <p class="empty">// no classes yet</p>'
 
 TEMPLATE = """<!doctype html>
@@ -90,6 +102,10 @@ TEMPLATE = """<!doctype html>
     .card:hover { transform: translateY(-4px); border-color: var(--purple);
                   box-shadow: 0 8px 30px rgba(139,92,246,.25); }
     .card .num { font-family: var(--mono); color: var(--blue); font-size: .85rem; }
+    .card .grade { position: absolute; top: 1.2rem; right: 1.2rem; font-family: var(--mono); font-size: .75rem;
+                   padding: .2rem .6rem; border-radius: 999px; color: var(--text);
+                   background: linear-gradient(90deg, rgba(59,130,246,.25), rgba(139,92,246,.25));
+                   border: 1px solid rgba(139,92,246,.5); }
     .card strong { font-size: 1.25rem; font-weight: 600; }
     .card code { font-family: var(--mono); color: var(--muted); font-size: .8rem; }
     .card .go { margin-top: .6rem; font-family: var(--mono); font-size: .85rem; color: var(--purple); }

@@ -57,6 +57,10 @@
     .card:hover { transform: translateY(-4px); border-color: var(--purple);
                   box-shadow: 0 8px 30px rgba(139,92,246,.25); }
     .card .num { font-family: var(--mono); color: var(--blue); font-size: .85rem; }
+    .card .grade { position: absolute; top: 1.2rem; right: 1.2rem; font-family: var(--mono); font-size: .75rem;
+                   padding: .2rem .6rem; border-radius: 999px; color: var(--text);
+                   background: linear-gradient(90deg, rgba(59,130,246,.25), rgba(139,92,246,.25));
+                   border: 1px solid rgba(139,92,246,.5); }
     .card strong { font-size: 1.25rem; font-weight: 600; }
     .card code { font-family: var(--mono); color: var(--muted); font-size: .8rem; }
     .card .go { margin-top: .6rem; font-family: var(--mono); font-size: .85rem; color: var(--purple); }
@@ -81,7 +85,7 @@
     <h1>Built live in the <span>classroom</span></h1>
     <p class="sub">Websites and games made together with students, one idea shouted from the back row at a time.</p>
     <div class="stats">
-      <div><strong>5</strong><span>classes</span></div>
+      <div><strong>4</strong><span>classes</span></div>
       <div><strong>100%</strong><span>kid ideas</span></div>
       <div><strong>0</strong><span>bugs (probably)</span></div>
     </div>
@@ -89,11 +93,10 @@
 
   <div class="section-title" id="classes"><b>01.</b> Our Classes</div>
   <main>
-      <a class="card" style="--i:0" href="ms-rosas-space-exploration-game/"><span class="num">01.</span><strong>Ms Rosa&#x27;s Space Exploration Game</strong><code>/ms-rosas-space-exploration-game/</code><span class="go">open &rarr;</span></a>
-      <a class="card" style="--i:1" href="ms-rosas-t-rex-dino-game/"><span class="num">02.</span><strong>Ms Rosa&#x27;s T-Rex Dino Game</strong><code>/ms-rosas-t-rex-dino-game/</code><span class="go">open &rarr;</span></a>
-      <a class="card" style="--i:2" href="ms-sev-squishies/"><span class="num">03.</span><strong>Squishy Labs</strong><code>/ms-sev-squishies/</code><span class="go">open &rarr;</span></a>
+      <a class="card" style="--i:0" href="ms-sevs-squishies-website/"><span class="num">01.</span><span class="grade">Grade 2</span><strong>Ms Sev&#x27;s Squishies Website</strong><code>/ms-sevs-squishies-website/</code><span class="go">open &rarr;</span></a>
+      <a class="card" style="--i:1" href="ms-rosas-space-exploration-game/"><span class="num">02.</span><strong>Ms Rosa&#x27;s Space Exploration Game</strong><code>/ms-rosas-space-exploration-game/</code><span class="go">open &rarr;</span></a>
+      <a class="card" style="--i:2" href="ms-rosas-t-rex-dino-game/"><span class="num">03.</span><strong>Ms Rosa&#x27;s T-Rex Dino Game</strong><code>/ms-rosas-t-rex-dino-game/</code><span class="go">open &rarr;</span></a>
       <a class="card" style="--i:3" href="ms-sevs-pokemon-website/"><span class="num">04.</span><strong>Ms Sev&#x27;s Pokemon Website</strong><code>/ms-sevs-pokemon-website/</code><span class="go">open &rarr;</span></a>
-      <a class="card" style="--i:4" href="ms-sevs-squishies-website/"><span class="num">05.</span><strong>Ms Sev&#x27;s Squishies Website</strong><code>/ms-sevs-squishies-website/</code><span class="go">open &rarr;</span></a>
   </main>
 
   <footer>&copy; 2026 // Pinellas Academy of Math and Science // built with kids &amp; code</footer>
