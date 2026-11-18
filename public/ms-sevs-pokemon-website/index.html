@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ms sevs pokemon website - Teach-In</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+<!-- Local libs (work offline, served from /_lib/). Add three.min.js via @@HEAD when 3D is wanted. -->
+<link rel="stylesheet" href="/_lib/animate.min.css">
+<script src="/_lib/tailwind.js"></script>
+<script src="/_lib/gsap.min.js"></script>
+
+<style>
+:root{--a:#7c3aed;--b:#ec4899;--c:#f59e0b;--ink:#2e1065}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:Fredoka,system-ui,sans-serif;color:var(--ink);display:flex;flex-direction:column;overflow:hidden;
+  background:linear-gradient(135deg,#fde68a,#fbcfe8,#c4b5fd,#a5f3fc);background-size:300% 300%;animation:bg 14s ease infinite}
+@keyframes bg{50%{background-position:100% 100%}}
+header{background:linear-gradient(90deg,var(--a),var(--b));color:#fff;text-align:center;padding:1.2vh 2vw;font-size:clamp(32px,5.5vh,64px);font-weight:700;text-shadow:0 4px 0 rgba(0,0,0,.25);text-transform:capitalize;z-index:2}
+header span{display:inline-block;animation:wob 2s ease-in-out infinite}
+@keyframes wob{50%{transform:rotate(12deg) scale(1.2)}}
+main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh;padding:2vh 3vw;position:relative;z-index:1;text-align:center}
+/* ---- BIG BUTTONS: use class="btn" ---- */
+.btn{font:700 clamp(28px,5vh,56px) Fredoka,system-ui,sans-serif;color:#fff;background:linear-gradient(180deg,var(--b),var(--a));border:0;border-radius:999px;padding:.4em 1.1em;cursor:pointer;box-shadow:0 8px 0 rgba(0,0,0,.25);transition:transform .1s;animation:pop 2.4s ease-in-out infinite}
+.btn:hover{transform:scale(1.08) rotate(-2deg)}.btn:active{transform:translateY(6px) scale(.97);box-shadow:0 2px 0 rgba(0,0,0,.25)}
+@keyframes pop{50%{transform:scale(1.04)}}
+.shake{animation:shk .5s}@keyframes shk{25%{transform:translateX(-14px) rotate(-3deg)}75%{transform:translateX(14px) rotate(3deg)}}
+.bounce{animation:bnc .6s}@keyframes bnc{40%{transform:translateY(-40px) scale(1.2)}}
+.spin{animation:spn .8s}@keyframes spn{to{transform:rotate(360deg)}}
+footer{background:rgba(46,16,101,.9);color:#fff;text-align:center;padding:1vh 2vw;font-size:clamp(16px,2.4vh,28px);z-index:2}
+/* ---- BLING layer ---- */
+#fx{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+.float{position:fixed;bottom:-80px;font-size:48px;opacity:.55;animation:fl linear forwards;pointer-events:none;z-index:0}
+@keyframes fl{to{transform:translateY(-120vh) rotate(360deg)}}
+body{overflow:hidden!important}
+#stage{overflow-y:auto!important;min-height:0;justify-content:flex-start!important}
+#canvas{justify-content:flex-start!important;flex:none!important;padding-bottom:60px}
+.tabs{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:14px}
+.tab{font-size:28px;font-weight:800;padding:10px 20px;border-radius:20px;background:#fff;color:#4c1d95;border:4px solid #4c1d95;cursor:pointer}
+.tab.on{background:#facc15;transform:scale(1.08)}
+.page{display:none}.page.on{display:block}
+.grid{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
+.card{width:190px;border-radius:20px;padding:10px;text-align:center;background:#fff;color:#222;border:6px solid var(--c);box-shadow:0 0 18px var(--c);cursor:pointer;transition:transform .2s;display:inline-block}
+.card:hover{transform:scale(1.07) rotate(-2deg)}
+.card .e{font-size:78px;line-height:1.1}.card .n{font-size:26px;font-weight:800}.card .t{font-size:22px}
+.card .r{font-size:20px;font-weight:800;color:#fff;background:var(--c);border-radius:12px;padding:2px 8px;display:inline-block}
+.card.locked{filter:grayscale(1) brightness(.5);box-shadow:none}
+.card.legend{animation:rb 2s linear infinite}
+@keyframes rb{0%{box-shadow:0 0 25px gold}50%{box-shadow:0 0 40px magenta}100%{box-shadow:0 0 25px gold}}
+.big{font-size:36px;font-weight:800;text-align:center;margin:10px;color:#fff;text-shadow:2px 2px 0 #4c1d95}
+.coins{font-size:34px;font-weight:800;background:#facc15;color:#4c1d95;border-radius:20px;padding:4px 18px;display:inline-block}
+.mv{background:#fff;color:#222;border-radius:20px;padding:14px 20px;margin:10px auto;max-width:900px;font-size:30px;font-weight:700;border-left:16px solid #a855f7;cursor:pointer}
+.gc{width:150px;height:150px;font-size:80px;border-radius:20px;background:#fff;border:6px solid #7c3aed;cursor:pointer}
+#scan{width:260px;height:260px;border-radius:50%;border:12px solid #22c55e;background:#111;color:#fff;font-size:110px;display:flex;align-items:center;justify-content:center;margin:10px auto}
+.scanning{animation:sp .4s linear infinite}@keyframes sp{50%{border-color:#facc15;transform:scale(1.1)}}
+
+</style>
+</head>
+<body>
+<header><span>🌟</span> ms sevs pokemon website <span>🌟</span></header>
+<main id="stage">
+  <!-- BUILD THE SITE HERE: big canvas area -->
+  <div id="canvas" style="flex:1;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh"><div class="big" style="font-size:56px">🌟 Pocket Critters! 🌟</div>
+<div style="text-align:center"><span class="coins">🪙 <span id="coins">60</span></span></div>
+<div class="tabs" id="tabs"></div>
+<div id="pg-cards" class="page"><div class="big">My Critter Cards (tap one!)</div><div id="cgrid" class="grid"></div></div>
+<div id="pg-store" class="page"><div class="big">🏪 Critter Store</div>
+<div style="text-align:center"><button class="btn" id="buy">🎁 Buy a Pack — 20 🪙</button><div id="packout" class="grid" style="margin-top:14px"></div></div></div>
+<div id="pg-scan" class="page"><div class="big">📡 Critter Scanner</div><div id="scan">❓</div>
+<div style="text-align:center"><button class="btn" id="scanbtn">Scan the Grass!</button></div><div class="big" id="scanmsg"></div></div>
+<div id="pg-game" class="page"><div class="big">🎮 Type Battle! Pick the winner!</div>
+<div class="big" style="font-size:28px">🔥 beats 🍃 · 🍃 beats 💧 · 💧 beats 🔥 · ⚡ beats ☁️ · ☁️ beats 🍃</div>
+<div style="text-align:center"><div id="gfoe" class="big"></div><div class="big" id="gmine"></div>
+<div style="display:flex;gap:14px;justify-content:center" id="gbtns"></div><div class="big" id="gmsg">Pick a card to play!</div>
+<button class="btn" id="gnext">Next Round ➡️</button></div></div>
+<div id="pg-movies" class="page"><div class="big">🎬 Critter Movies</div><div id="mlist"></div></div>
+<div id="pg-trade" class="page"><div class="big">🔄 Trading Corner</div>
+<div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;align-items:center">
+<div style="text-align:center"><div class="big">You give</div><div id="tmine"></div><button class="btn" id="tmineb">Change 🔁</button></div>
+<div style="font-size:80px">↔️</div>
+<div style="text-align:center"><div class="big" id="tfname">Friend gives</div><div id="tfoe"></div><button class="btn" id="tfoeb">Other Friend 🔁</button></div></div>
+<div style="text-align:center"><button class="btn" id="swap">🤝 SWAP!</button><div class="big" id="tmsg"></div></div></div>
+<div id="pg-rare" class="page"><div class="big">💎 How Rare Is It?</div><div id="rlist"></div></div>
+</div>
+</main>
+<footer>Built live with AI at PAMS - Great American Teach-In 2026</footer>
+<div id="fx"></div>
+
+<script>
+/* ===== BLING KIT (keep! call these from your code) =====
+ confetti(x?,y?)  burst of confetti      beep(freq?,ms?)   happy sound
+ tune([notes])    play note list         floaty(['🦖','🎈']) emoji rise in background
+ wiggle(el,'shake'|'bounce'|'spin')       say('text')       speech bubble toast
+ Sparkle cursor trail is automatic; every .btn click auto-plays pop + confetti. */
+const $=s=>document.querySelector(s), fx=$('#fx');
+let _ac; function beep(f=660,ms=120,type='sine'){try{_ac=_ac||new (window.AudioContext||window.webkitAudioContext)();
+  const o=_ac.createOscillator(),g=_ac.createGain();o.type=type;o.frequency.value=f;g.gain.value=.15;o.connect(g);g.connect(_ac.destination);
+  o.start();g.gain.exponentialRampToValueAtTime(.001,_ac.currentTime+ms/1000);o.stop(_ac.currentTime+ms/1000)}catch(e){}}
+function tune(n=[523,659,784,1047]){n.forEach((f,i)=>setTimeout(()=>beep(f,180,'triangle'),i*130))}
+function confetti(x=innerWidth/2,y=innerHeight/2,n=40){const C=['#ef4444','#f59e0b','#10b981','#3b82f6','#a855f7','#ec4899'];
+  for(let i=0;i<n;i++){const d=document.createElement('div'),a=Math.random()*6.28,v=150+Math.random()*350;
+    d.style.cssText=`position:absolute;left:${x}px;top:${y}px;width:12px;height:18px;background:${C[i%6]};border-radius:3px`;fx.appendChild(d);
+    d.animate([{transform:'translate(0,0) rotate(0)',opacity:1},{transform:`translate(${Math.cos(a)*v}px,${Math.sin(a)*v+300}px) rotate(${Math.random()*900}deg)`,opacity:0}],{duration:1200+Math.random()*600,easing:'cubic-bezier(.2,.7,.3,1)'}).onfinish=()=>d.remove()}}
+function floaty(list=['⭐','🎈','🌈','🦋']){setInterval(()=>{const e=document.createElement('div');e.className='float';e.textContent=list[Math.random()*list.length|0];
+  e.style.left=Math.random()*95+'vw';e.style.animationDuration=(7+Math.random()*6)+'s';document.body.appendChild(e);setTimeout(()=>e.remove(),14000)},900)}
+function wiggle(el,c='shake'){el.classList.remove(c);void el.offsetWidth;el.classList.add(c);setTimeout(()=>el.classList.remove(c),900)}
+function say(t,ms=2500){const d=document.createElement('div');d.textContent=t;d.style.cssText='position:fixed;top:14vh;left:50%;transform:translateX(-50%);background:#fff;color:#4c1d95;font:700 clamp(28px,5vh,56px) Fredoka;padding:.4em .9em;border-radius:30px;box-shadow:0 8px 0 rgba(0,0,0,.2);z-index:60';
+  document.body.appendChild(d);d.animate([{transform:'translateX(-50%) scale(.3)'},{transform:'translateX(-50%) scale(1.1)'},{transform:'translateX(-50%) scale(1)'}],{duration:300});setTimeout(()=>d.remove(),ms)}
+addEventListener('pointermove',e=>{if(Math.random()>.35)return;const s=document.createElement('div');s.textContent=['✨','⭐','💫'][Math.random()*3|0];
+  s.style.cssText=`position:absolute;left:${e.clientX}px;top:${e.clientY}px;font-size:28px`;fx.appendChild(s);
+  s.animate([{transform:'scale(1)',opacity:1},{transform:'translateY(40px) scale(.2)',opacity:0}],{duration:700}).onfinish=()=>s.remove()});
+addEventListener('click',e=>{if(e.target.closest('.btn')){beep(500+Math.random()*500,100);confetti(e.clientX,e.clientY,18)}});
+floaty();
+/* ===== YOUR CODE BELOW ===== */
+const R=[{n:'Common',s:'⚪',c:'#94a3b8',w:50,d:'Easy to find! Everybody has these.'},{n:'Uncommon',s:'🟢',c:'#22c55e',w:28,d:'A little bit special.'},{n:'Rare',s:'🔵',c:'#3b82f6',w:14,d:'Not many critters are rare!'},{n:'Epic',s:'🟣',c:'#a855f7',w:6,d:'WOW! Very, very special.'},{n:'Legendary',s:'🌟',c:'#f59e0b',w:2,d:'The rarest of ALL! Super shiny!'}];
+const T={fire:'🔥',water:'💧',leaf:'🍃',zap:'⚡',sky:'☁️'};
+const beats={fire:'leaf',leaf:'water',water:'fire',zap:'sky',sky:'leaf'};
+const C=[['🐭','Zappy','zap',0],['🐢','Splashell','water',0],['🐸','Leafrog','leaf',0],['🦊','Foxfire','fire',0],['🐦','Puffbird','sky',0],['🐰','Bunnybloom','leaf',1],['🐧','Frostwaddle','water',1],['🐱','Sparkitty','zap',1],['🦉','Hootsky','sky',1],['🐻','Cuddlefire','fire',2],['🦋','Petalfly','leaf',2],['🐙','Inkiwave','water',2],['🦕','Dinoleaf','leaf',3],['🐉','Embrdrake','fire',3],['🦄','Rainbowcorn','sky',4],['🐲','Thundrake','zap',4]].map((a,i)=>({id:i,e:a[0],n:a[1],t:a[2],r:a[3]}));
+let coins=60;const own={0:1,1:1,3:1,7:1};
+const Q=s=>document.querySelector(s);
+const safe=f=>{try{f()}catch(e){}};
+const bl=()=>safe(()=>{beep();confetti()});
+function pick(){let t=R.reduce((a,r)=>a+r.w,0),x=Math.random()*t;let ri=0;for(;ri<R.length;ri++){x-=R[ri].w;if(x<0)break}ri=Math.min(ri,4);const p=C.filter(c=>c.r===ri);return p[Math.floor(Math.random()*p.length)]}
+function cardH(c,locked){const r=R[c.r];return `<div class="card ${locked?'locked':''} ${c.r==4&&!locked?'legend':''}" style="--c:${r.c}" data-id="${c.id}"><div class="e">${locked?'❓':c.e}</div><div class="n">${locked?'???':c.n}</div><div class="t">${T[c.t]} ${c.t}</div><div class="r">${r.s} ${r.n}</div>${own[c.id]>1?'<div class="t">x'+own[c.id]+'</div>':''}</div>`}
+function setCoins(n){coins=n;Q('#coins').textContent=coins}
+function render(){Q('#cgrid').innerHTML=C.map(c=>cardH(c,!own[c.id])).join('');
+ document.querySelectorAll('#cgrid .card').forEach(el=>el.onclick=()=>{safe(()=>{beep();wiggle(el,'tada')});if(!el.classList.contains('locked'))safe(()=>say(C[el.dataset.id].n+'!'))})}
+const pages=[['cards','🃏 Cards'],['store','🏪 Store'],['scan','📡 Scanner'],['game','🎮 Game'],['movies','🎬 Movies'],['trade','🔄 Trade'],['rare','💎 Rarity']];
+Q('#tabs').innerHTML=pages.map(p=>`<button class="tab" data-p="${p[0]}">${p[1]}</button>`).join('');
+function show(p){document.querySelectorAll('.page').forEach(e=>e.classList.toggle('on',e.id==='pg-'+p));document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('on',e.dataset.p===p));if(p==='cards')render();if(p==='trade')tradeInit();if(p==='game')gameRound();safe(()=>beep())}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>show(b.dataset.p));
+function give(c){own[c.id]=(own[c.id]||0)+1}
+Q('#buy').onclick=()=>{if(coins<20){Q('#packout').innerHTML='<div class="big">Not enough 🪙! Try the Scanner or Game!</div>';return}
+ setCoins(coins-20);const got=[pick(),pick(),pick()];got.forEach(give);Q('#packout').innerHTML=got.map(c=>cardH(c,false)).join('');bl();if(got.some(c=>c.r>=3))safe(()=>floaty(['🌟','✨','💎']))};
+let sc=false;Q('#scanbtn').onclick=()=>{if(sc)return;sc=true;const s=Q('#scan');s.classList.add('scanning');s.textContent='📡';Q('#scanmsg').textContent='Scanning...';safe(()=>tune());
+ setTimeout(()=>{s.classList.remove('scanning');const c=pick();give(c);s.textContent=c.e;Q('#scanmsg').textContent='Found '+c.n+'! '+R[c.r].s+' '+R[c.r].n+' +5🪙';setCoins(coins+5);bl();sc=false},1800)};
+let gm,gf;function gameRound(){const mine=C.filter(c=>own[c.id]);gm=[0,1,2].map(()=>mine[Math.floor(Math.random()*mine.length)]);gf=C[Math.floor(Math.random()*C.length)];
+ Q('#gfoe').textContent='Wild critter: '+gf.e+' '+gf.n+' '+T[gf.t];Q('#gmine').textContent='Your team:';Q('#gmsg').textContent='Pick a card to play!';
+ Q('#gbtns').innerHTML=gm.map((c,i)=>`<button class="gc" data-i="${i}">${c.e}<div style="font-size:22px">${T[c.t]}</div></button>`).join('');
+ document.querySelectorAll('.gc').forEach(b=>b.onclick=()=>{const c=gm[b.dataset.i];let m;
+  if(beats[c.t]===gf.t){m='🎉 You WIN! '+T[c.t]+' beats '+T[gf.t]+' +3🪙';setCoins(coins+3);bl()}
+  else if(beats[gf.t]===c.t){m='😄 Silly! '+T[gf.t]+' wins this time. Try again!';safe(()=>beep())}
+  else{m='🤝 Tie! Everybody dances!';safe(()=>floaty(['💃','🕺','🎶']))}
+  Q('#gmsg').textContent=m;safe(()=>wiggle(b,'bounce'))})}
+Q('#gnext').onclick=gameRound;
+const M=[['🌈 Critters of Rainbow Valley','A tiny critter finds a magic rainbow!'],['🚀 Critters Go to the Moon','Zappy and friends blast off!'],['🎂 The Great Critter Bake-Off','Who makes the yummiest cake?'],['🏝️ Splashell\'s Beach Party','Water critters dance all day!'],['🦄 The Legend of Rainbowcorn','The rarest critter ever!'],['🐻 Cuddlefire Saves Winter','A cozy bear warms up the snow.']];
+Q('#mlist').innerHTML=M.map(m=>`<div class="mv">${m[0]}<br><span style="font-size:24px;font-weight:400">${m[1]}</span></div>`).join('');
+document.querySelectorAll('.mv').forEach(e=>e.onclick=()=>{safe(()=>wiggle(e,'bounce'));bl()});
+Q('#rlist').innerHTML=R.map((r,i)=>`<div class="mv" style="border-color:${r.c}">${r.s} ${r.n} — ${r.d}<br><span style="font-size:24px;font-weight:400">${'⭐'.repeat(5-i)} · ${r.w} out of 100 cards</span></div>`).join('');
+const fr=['Sunny','Bubbles','Captain Giggles'];let ti=0,fi=0,tc,ff;
+function tradeInit(){const mine=C.filter(c=>own[c.id]);tc=mine[ti%mine.length];ff=C[(fi*5+3)%C.length];Q('#tmine').innerHTML=cardH(tc,false);Q('#tfoe').innerHTML=cardH(ff,false);Q('#tfname').textContent=fr[fi%3]+' the critter gives';Q('#tmsg').textContent=''}
+Q('#tmineb').onclick=()=>{ti++;tradeInit();safe(()=>beep())};Q('#tfoeb').onclick=()=>{fi++;tradeInit();safe(()=>beep())};
+Q('#swap').onclick=()=>{own[tc.id]--;if(!own[tc.id])delete own[tc.id];give(ff);Q('#tmsg').textContent='🎉 Swapped '+tc.n+' for '+ff.n+'!';bl();ti=0;setTimeout(tradeInit,1800)};
+show('cards');
+
+</script>
+</body>
+</html>
