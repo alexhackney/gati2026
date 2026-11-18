@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Regenerate the root index.html by listing every class folder.
+"""Regenerate public/index.html by listing every class folder in public/.
 
-A class folder is any top-level directory containing an index.html.
+A class folder is any directory in public/ containing an index.html.
 Its title is taken from the <title> tag of that index.html.
 Run from anywhere:  python3 scripts/build-index.py
 """
 import html, re
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-SKIP = {"scripts", "assets"}
+ROOT = Path(__file__).resolve().parent.parent / "public"
+SKIP = {"assets"}
 
 
 def title_of(page: Path, fallback: str) -> str:
