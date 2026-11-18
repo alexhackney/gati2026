@@ -66,7 +66,10 @@
     .card code { font-family: var(--mono); color: var(--muted); font-size: .8rem; }
     .card .go { margin-top: .6rem; font-family: var(--mono); font-size: .85rem; color: var(--purple); }
     .empty { grid-column: 1 / -1; text-align: center; font-family: var(--mono); color: var(--muted); }
-    footer { text-align: center; padding: 2rem 1rem 3rem; color: var(--muted); font-family: var(--mono); font-size: .8rem; }
+    footer { text-align: center; padding: 2rem 1rem 3rem; color: var(--muted); font-family: var(--mono); font-size: .8rem; line-height: 1.8; }
+    footer .thanks { color: var(--text); font-size: .95rem; margin: 0 0 .6rem; }
+    footer a { color: var(--purple); text-decoration: none; border-bottom: 1px solid rgba(139,92,246,.5); }
+    footer a:hover { color: var(--text); }
     @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
     @media (prefers-reduced-motion: reduce) { .card { animation: none; opacity: 1; } }
     @media (max-width: 560px) { .stats { gap: 1.5rem; } header { padding-top: 4rem; } }
@@ -98,14 +101,18 @@
       <a class="card" style="--i:1" href="ms-sevs-squishies-website/"><span class="num">02.</span><span class="grade">Grade 2</span><strong>Ms Sev&#x27;s Squishies Website</strong><code>/ms-sevs-squishies-website/</code><span class="go">open &rarr;</span></a>
       <a class="card" style="--i:2" href="ms-rosas-space-exploration-game/"><span class="num">03.</span><span class="grade">Grade 3</span><strong>Ms Rosa&#x27;s Space Exploration Game</strong><code>/ms-rosas-space-exploration-game/</code><span class="go">open &rarr;</span></a>
       <a class="card" style="--i:3" href="ms-rosas-t-rex-dino-game/"><span class="num">04.</span><span class="grade">Grade 3</span><strong>Ms Rosa&#x27;s T-Rex Dino Game</strong><code>/ms-rosas-t-rex-dino-game/</code><span class="go">open &rarr;</span></a>
-      <a class="card" style="--i:4" href="forestner-1/"><span class="num">05.</span><span class="grade">Grade 4</span><strong>forestner 1 - Teach-In</strong><code>/forestner-1/</code><span class="go">open &rarr;</span></a>
+      <a class="card" style="--i:4" href="forstner-game-name-here/"><span class="num">05.</span><span class="grade">Grade 4</span><strong>Forstner Game Name Here</strong><code>/forstner-game-name-here/</code><span class="go">open &rarr;</span></a>
       <a class="card" style="--i:5" href="ms-q-dino-match-game/"><span class="num">06.</span><span class="grade">Grade 4</span><strong>Ms Q&#x27;s Dino Match Game</strong><code>/ms-q-dino-match-game/</code><span class="go">open &rarr;</span></a>
       <a class="card" style="--i:6" href="ms-q-moon-rocks-game/"><span class="num">07.</span><span class="grade">Grade 4</span><strong>Ms Q&#x27;s Moon Rocks Game</strong><code>/ms-q-moon-rocks-game/</code><span class="go">open &rarr;</span></a>
       <a class="card" style="--i:7" href="mr-shimko-drifting-game/"><span class="num">08.</span><span class="grade">Grade 5</span><strong>Mr Shimko&#x27;s Drifting Game</strong><code>/mr-shimko-drifting-game/</code><span class="go">open &rarr;</span></a>
       <a class="card" style="--i:8" href="mr-shimko-survival-game/"><span class="num">09.</span><span class="grade">Grade 5</span><strong>Mr Shimko&#x27;s Survival Game</strong><code>/mr-shimko-survival-game/</code><span class="go">open &rarr;</span></a>
   </main>
 
-  <footer>&copy; 2026 // Pinellas Academy of Math and Science // built with kids &amp; code</footer>
+  <footer>
+    <p class="thanks">Thank you for having me! &mdash; Alex</p>
+    <div>See the code we built today: <a href="https://github.com/alexhackney/gati2026">github.com/alexhackney/gati2026</a></div>
+    <div>&copy; 2026 // Pinellas Academy of Math and Science // built with kids &amp; code</div>
+  </footer>
 
   <script>
   (function () {

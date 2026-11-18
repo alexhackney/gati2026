@@ -111,7 +111,10 @@ TEMPLATE = """<!doctype html>
     .card code { font-family: var(--mono); color: var(--muted); font-size: .8rem; }
     .card .go { margin-top: .6rem; font-family: var(--mono); font-size: .85rem; color: var(--purple); }
     .empty { grid-column: 1 / -1; text-align: center; font-family: var(--mono); color: var(--muted); }
-    footer { text-align: center; padding: 2rem 1rem 3rem; color: var(--muted); font-family: var(--mono); font-size: .8rem; }
+    footer { text-align: center; padding: 2rem 1rem 3rem; color: var(--muted); font-family: var(--mono); font-size: .8rem; line-height: 1.8; }
+    footer .thanks { color: var(--text); font-size: .95rem; margin: 0 0 .6rem; }
+    footer a { color: var(--purple); text-decoration: none; border-bottom: 1px solid rgba(139,92,246,.5); }
+    footer a:hover { color: var(--text); }
     @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
     @media (prefers-reduced-motion: reduce) { .card { animation: none; opacity: 1; } }
     @media (max-width: 560px) { .stats { gap: 1.5rem; } header { padding-top: 4rem; } }
@@ -142,7 +145,11 @@ TEMPLATE = """<!doctype html>
 __CARDS__
   </main>
 
-  <footer>&copy; 2026 // Pinellas Academy of Math and Science // built with kids &amp; code</footer>
+  <footer>
+    <p class="thanks">Thank you for having me! &mdash; Alex</p>
+    <div>See the code we built today: <a href="https://github.com/alexhackney/gati2026">github.com/alexhackney/gati2026</a></div>
+    <div>&copy; 2026 // Pinellas Academy of Math and Science // built with kids &amp; code</div>
+  </footer>
 
   <script>
   (function () {
