@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ms Rosa's Space Exploration Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+<!-- Local libs (work offline, served from /_lib/). Add three.min.js via @@HEAD when 3D is wanted. -->
+<link rel="stylesheet" href="/_lib/animate.min.css">
+<script src="/_lib/tailwind.js"></script>
+<script src="/_lib/gsap.min.js"></script>
+
+<style>
+:root{--a:#7c3aed;--b:#ec4899;--c:#f59e0b;--ink:#2e1065}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:Fredoka,system-ui,sans-serif;color:var(--ink);display:flex;flex-direction:column;overflow:hidden;
+  background:linear-gradient(135deg,#fde68a,#fbcfe8,#c4b5fd,#a5f3fc);background-size:300% 300%;animation:bg 14s ease infinite}
+@keyframes bg{50%{background-position:100% 100%}}
+header{background:linear-gradient(90deg,var(--a),var(--b));color:#fff;text-align:center;padding:1.2vh 2vw;font-size:clamp(32px,5.5vh,64px);font-weight:700;text-shadow:0 4px 0 rgba(0,0,0,.25);text-transform:capitalize;z-index:2}
+header span{display:inline-block;animation:wob 2s ease-in-out infinite}
+@keyframes wob{50%{transform:rotate(12deg) scale(1.2)}}
+main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh;padding:2vh 3vw;position:relative;z-index:1;text-align:center}
+/* ---- BIG BUTTONS: use class="btn" ---- */
+.btn{font:700 clamp(28px,5vh,56px) Fredoka,system-ui,sans-serif;color:#fff;background:linear-gradient(180deg,var(--b),var(--a));border:0;border-radius:999px;padding:.4em 1.1em;cursor:pointer;box-shadow:0 8px 0 rgba(0,0,0,.25);transition:transform .1s;animation:pop 2.4s ease-in-out infinite}
+.btn:hover{transform:scale(1.08) rotate(-2deg)}.btn:active{transform:translateY(6px) scale(.97);box-shadow:0 2px 0 rgba(0,0,0,.25)}
+@keyframes pop{50%{transform:scale(1.04)}}
+.shake{animation:shk .5s}@keyframes shk{25%{transform:translateX(-14px) rotate(-3deg)}75%{transform:translateX(14px) rotate(3deg)}}
+.bounce{animation:bnc .6s}@keyframes bnc{40%{transform:translateY(-40px) scale(1.2)}}
+.spin{animation:spn .8s}@keyframes spn{to{transform:rotate(360deg)}}
+footer{background:rgba(46,16,101,.9);color:#fff;text-align:center;padding:1vh 2vw;font-size:clamp(16px,2.4vh,28px);z-index:2}
+/* ---- BLING layer ---- */
+#fx{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+.float{position:fixed;bottom:-80px;font-size:48px;opacity:.55;animation:fl linear forwards;pointer-events:none;z-index:0}
+@keyframes fl{to{transform:translateY(-120vh) rotate(360deg)}}
+#tabs{display:flex;gap:20px;justify-content:center;margin-bottom:12px}
+#game{width:100%;max-width:1000px;display:block;margin:0 auto;border-radius:24px;border:6px solid #fff;background:#0b0b2e;touch-action:none;cursor:crosshair}
+#shows{display:none;max-width:1000px;margin:0 auto}
+#scene{position:relative;height:420px;border-radius:24px;border:6px solid #fff;overflow:hidden;background:linear-gradient(#0b0b2e,#3b1a7a);color:#fff}
+#cap{font-size:34px;font-weight:bold;text-align:center;color:#fff;background:rgba(0,0,0,.55);border-radius:16px;padding:10px;margin-top:10px}
+.ch{display:flex;gap:14px;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
+.em{position:absolute;line-height:1}
+@keyframes launch{0%{transform:translateY(0) rotate(-45deg)}100%{transform:translateY(-520px) rotate(-45deg)}}
+@keyframes orb{to{transform:rotate(360deg)}}
+@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-150px)}}
+@keyframes twk{0%,100%{opacity:.3}50%{opacity:1}}
+
+</style>
+</head>
+<body>
+<header><span>🌟</span> Ms Rosa's Space Exploration Game <span>🌟</span></header>
+<main id="stage">
+  <!-- BUILD THE SITE HERE: big canvas area -->
+  <div id="canvas" style="flex:1;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh"><div id="tabs">
+  <button class="btn" onclick="showTab('game')">🚀 Play Game</button>
+  <button class="btn" onclick="showTab('shows')">📺 Space Shows</button>
+</div>
+<div id="gameWrap"><canvas id="game" width="960" height="540"></canvas></div>
+<div id="shows">
+  <div class="ch">
+    <button class="btn" onclick="scene(0)">🚀 Launch!</button>
+    <button class="btn" onclick="scene(1)">🪐 Planet Parade</button>
+    <button class="btn" onclick="scene(2)">🌙 Moon Hop</button>
+  </div>
+  <div id="scene"></div>
+  <div id="cap"></div>
+</div>
+</div>
+</main>
+<footer>Built live with AI at PAMS - Great American Teach-In 2026</footer>
+<div id="fx"></div>
+
+<script>
+/* ===== BLING KIT (keep! call these from your code) =====
+ confetti(x?,y?)  burst of confetti      beep(freq?,ms?)   happy sound
+ tune([notes])    play note list         floaty(['🦖','🎈']) emoji rise in background
+ wiggle(el,'shake'|'bounce'|'spin')       say('text')       speech bubble toast
+ Sparkle cursor trail is automatic; every .btn click auto-plays pop + confetti. */
+const $=s=>document.querySelector(s), fx=$('#fx');
+let _ac; function beep(f=660,ms=120,type='sine'){try{_ac=_ac||new (window.AudioContext||window.webkitAudioContext)();
+  const o=_ac.createOscillator(),g=_ac.createGain();o.type=type;o.frequency.value=f;g.gain.value=.15;o.connect(g);g.connect(_ac.destination);
+  o.start();g.gain.exponentialRampToValueAtTime(.001,_ac.currentTime+ms/1000);o.stop(_ac.currentTime+ms/1000)}catch(e){}}
+function tune(n=[523,659,784,1047]){n.forEach((f,i)=>setTimeout(()=>beep(f,180,'triangle'),i*130))}
+function confetti(x=innerWidth/2,y=innerHeight/2,n=40){const C=['#ef4444','#f59e0b','#10b981','#3b82f6','#a855f7','#ec4899'];
+  for(let i=0;i<n;i++){const d=document.createElement('div'),a=Math.random()*6.28,v=150+Math.random()*350;
+    d.style.cssText=`position:absolute;left:${x}px;top:${y}px;width:12px;height:18px;background:${C[i%6]};border-radius:3px`;fx.appendChild(d);
+    d.animate([{transform:'translate(0,0) rotate(0)',opacity:1},{transform:`translate(${Math.cos(a)*v}px,${Math.sin(a)*v+300}px) rotate(${Math.random()*900}deg)`,opacity:0}],{duration:1200+Math.random()*600,easing:'cubic-bezier(.2,.7,.3,1)'}).onfinish=()=>d.remove()}}
+function floaty(list=['⭐','🎈','🌈','🦋']){setInterval(()=>{const e=document.createElement('div');e.className='float';e.textContent=list[Math.random()*list.length|0];
+  e.style.left=Math.random()*95+'vw';e.style.animationDuration=(7+Math.random()*6)+'s';document.body.appendChild(e);setTimeout(()=>e.remove(),14000)},900)}
+function wiggle(el,c='shake'){el.classList.remove(c);void el.offsetWidth;el.classList.add(c);setTimeout(()=>el.classList.remove(c),900)}
+function say(t,ms=2500){const d=document.createElement('div');d.textContent=t;d.style.cssText='position:fixed;top:14vh;left:50%;transform:translateX(-50%);background:#fff;color:#4c1d95;font:700 clamp(28px,5vh,56px) Fredoka;padding:.4em .9em;border-radius:30px;box-shadow:0 8px 0 rgba(0,0,0,.2);z-index:60';
+  document.body.appendChild(d);d.animate([{transform:'translateX(-50%) scale(.3)'},{transform:'translateX(-50%) scale(1.1)'},{transform:'translateX(-50%) scale(1)'}],{duration:300});setTimeout(()=>d.remove(),ms)}
+addEventListener('pointermove',e=>{if(Math.random()>.35)return;const s=document.createElement('div');s.textContent=['✨','⭐','💫'][Math.random()*3|0];
+  s.style.cssText=`position:absolute;left:${e.clientX}px;top:${e.clientY}px;font-size:28px`;fx.appendChild(s);
+  s.animate([{transform:'scale(1)',opacity:1},{transform:'translateY(40px) scale(.2)',opacity:0}],{duration:700}).onfinish=()=>s.remove()});
+addEventListener('click',e=>{if(e.target.closest('.btn')){beep(500+Math.random()*500,100);confetti(e.clientX,e.clientY,18)}});
+floaty();
+/* ===== YOUR CODE BELOW ===== */
+const S=(f,...a)=>{try{f(...a)}catch(e){}};
+const cv=document.getElementById('game'),cx=cv.getContext('2d');
+const W=960,H=540;
+let shots=[],fxs=[],shotT=0,st='menu',lvl=1,shield=3,crys=0,ship=1,lt=0,inv=0,msg='',msgT=0,objs=[],spawnT=0,bossT=0;
+const boss={x:W/2};
+const P={x:W/2,y:H-90},T={x:W/2,y:H-90};
+const keys={};
+const DUR=[0,20,22,24,26,30];
+const stars=Array.from({length:70},()=>({x:Math.random()*W,y:Math.random()*H,s:1+Math.random()*3}));
+
+function setTarget(e){const r=cv.getBoundingClientRect();T.x=(e.clientX-r.left)*W/r.width;T.y=(e.clientY-r.top)*H/r.height;}
+cv.addEventListener('pointermove',setTarget);
+cv.addEventListener('pointerdown',e=>{setTarget(e);if(st!=='play')start();});
+addEventListener('keydown',e=>{
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();
+  keys[e.key.toLowerCase()]=true;
+  if(st!=='play'&&(e.key===' '||e.key==='Enter')&&gameVisible())start();
+});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+function gameVisible(){return document.getElementById('gameWrap').style.display!=='none';}
+
+function start(){st='play';lvl=1;shield=3;crys=0;ship=1;lt=0;inv=0;objs=[];shots=[];fxs=[];spawnT=0;bossT=1;msg='Level 1';msgT=2;S(beep);}
+function nextLevel(){lvl++;lt=0;objs=[];shield=3;inv=1;bossT=1;msg=lvl===5?'👾 BOSS: Giant Alien Zorp!':'Level '+lvl;msgT=2.5;S(confetti);S(tune);}
+function win(){st='win';S(confetti);S(confetti);S(tune);S(say,'You win!');}
+
+function spawn(){
+  const r=Math.random(),x=40+Math.random()*(W-80),sp=130+lvl*40+Math.random()*60;
+  if(r<0.2)objs.push({k:'c',e:'💎',x,y:-40,sp:sp*0.8,r:26,rot:0,rs:2,sz:48});
+  else if(lvl>=2&&r<0.5)objs.push({k:'h',e:'🛰️',x,y:-40,sp,r:30,rot:0,rs:(Math.random()-.5)*3,sz:64});
+  else objs.push({k:'h',e:'☄️',x,y:-40,sp,r:30,rot:0,rs:(Math.random()-.5)*2,sz:60});
+}
+function hit(){
+  shield--;inv=1.5;S(beep);
+  if(shield<=0){shield=0;st='over';S(tune);}
+}
+function update(dt){
+  for(const s of stars){s.y+=s.s*40*dt;if(s.y>H){s.y=0;s.x=Math.random()*W;}}
+  if(st!=='play')return;
+  const sp=450;
+  if(keys.arrowleft||keys.a)T.x-=sp*dt;
+  if(keys.arrowright||keys.d)T.x+=sp*dt;
+  if(keys.arrowup||keys.w)T.y-=sp*dt;
+  if(keys.arrowdown||keys.s)T.y+=sp*dt;
+  T.x=Math.max(30,Math.min(W-30,T.x));T.y=Math.max(60,Math.min(H-40,T.y));
+  const k=Math.min(1,dt*(6+ship*1.5));
+  P.x+=(T.x-P.x)*k;P.y+=(T.y-P.y)*k;
+  lt+=dt;inv-=dt;msgT-=dt;
+  spawnT-=dt;
+  if(spawnT<=0){spawnT=Math.max(0.25,1.0-lvl*0.13)*(lvl===5?1.3:1);spawn();}
+  if(lvl===5){
+    boss.x=W/2+Math.sin(lt*0.9)*300;
+    bossT-=dt;
+    if(bossT<=0){bossT=0.75;objs.push({k:'h',e:Math.random()<.5?'🍕':'🍩',x:boss.x,y:170,sp:230+Math.random()*80,r:28,rot:0,rs:3,sz:56});}
+  }
+  shotT-=dt;
+  if(keys[' ']&&shotT<=0){shotT=Math.max(0.12,0.28-ship*0.03);S(beep);
+    if(ship>=3){shots.push({x:P.x-16,y:P.y-30},{x:P.x+16,y:P.y-30});}else shots.push({x:P.x,y:P.y-30});}
+  for(const s of shots)s.y-=900*dt;
+  shots=shots.filter(s=>s.y>-40&&!s.dead);
+  for(const f of fxs)f.t-=dt;
+  fxs=fxs.filter(f=>f.t>0);
+  for(const o of objs){
+    const dx=P.x-o.x,dy=P.y-o.y,d=Math.hypot(dx,dy);
+    if(o.k==='c'&&ship>1&&d<70+ship*45)o.pull=true;
+    if(o.k==='c'&&o.pull&&d>1){const v=Math.min(d/dt,750)*dt;o.x+=dx/d*v;o.y+=dy/d*v;}
+    else{o.y+=o.sp*dt;}
+    o.rot+=o.rs*dt;
+    if(o.k==='h')for(const s of shots){if(!s.dead&&Math.hypot(s.x-o.x,s.y-o.y)<o.r+18){s.dead=true;o.dead=true;fxs.push({x:o.x,y:o.y,t:0.4});S(beep);}}
+    if(o.k==='c'&&d<50){
+      o.dead=true;crys++;S(beep);
+      if(crys%3===0&&ship<5){ship++;msg='⭐ Ship upgraded! ⭐';msgT=2;S(floaty,['⭐','✨','💎']);S(say,'Ship upgraded!');S(confetti);}
+    }else if(o.k==='h'&&inv<=0&&d<o.r+16){o.dead=true;hit();}
+    if(o.y>H+80)o.dead=true;
+  }
+  objs=objs.filter(o=>!o.dead);
+  if(lt>=DUR[lvl]){if(lvl===5)win();else nextLevel();}
+}
+function E(e,x,y,size,rot){cx.save();cx.translate(x,y);cx.rotate(rot||0);cx.font=size+'px serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(e,0,0);cx.restore();}
+function TX(t,x,y,size,col,al){cx.font='bold '+size+'px sans-serif';cx.textAlign=al||'center';cx.textBaseline='middle';cx.fillStyle=col||'#fff';cx.lineWidth=6;cx.strokeStyle='#000';cx.strokeText(t,x,y);cx.fillText(t,x,y);}
+function draw(){
+  const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b0b2e');g.addColorStop(1,lvl===5?'#5a1a7a':'#1b2a6e');
+  cx.fillStyle=g;cx.fillRect(0,0,W,H);
+  cx.fillStyle='#fff';
+  for(const s of stars){cx.globalAlpha=0.5+s.s/6;cx.fillRect(s.x,s.y,s.s,s.s);}
+  cx.globalAlpha=1;
+  if(st==='menu'){
+    E('🚀',W/2,170,150,-Math.PI/4);
+    TX('SPACE DODGE!',W/2,290,72,'#ffe34d');
+    TX('Move your mouse or arrow keys',W/2,360,36);
+    TX('SPACE = laser! Grab 💎 to upgrade!',W/2,405,36);
+    TX('▶ Click to start',W/2,480,48,'#7dff7d');
+    return;
+  }
+  for(const o of objs)E(o.e,o.x,o.y,o.sz,o.rot);
+  for(const f of fxs)E('💥',f.x,f.y,70,0);
+  cx.save();cx.shadowColor='#0ff';cx.shadowBlur=14;cx.fillStyle='#8ff';
+  for(const s of shots)cx.fillRect(s.x-4,s.y-22,8,44);
+  cx.restore();
+  if(lvl===5&&st==='play'){
+    E('👾',boss.x,110,190,Math.sin(lt*3)*0.15);
+    const p=Math.min(1,lt/DUR[5]);
+    cx.fillStyle='#000';cx.fillRect(W/2-200,12,400,26);
+    cx.fillStyle='#ff5ad1';cx.fillRect(W/2-196,16,392*(1-p),18);
+    TX(p>.7?'Zorp is getting sleepy 😴':'Zorp is hungry! 🍕',W/2,56,26);
+  }
+  if(st==='play'){
+    if(inv<=0||Math.floor(inv*10)%2===0){
+      cx.save();
+      if(ship>1){cx.shadowColor='#7df';cx.shadowBlur=10+ship*8;}
+      E('🚀',P.x,P.y,44+ship*8,-Math.PI/4);
+      cx.restore();
+      if(ship>2)E('🔥',P.x,P.y+30+ship*4,28+ship*3,0);
+    }
+  }
+  const p2=st==='win'?1:Math.min(1,lt/DUR[lvl]);
+  cx.fillStyle='#000';cx.fillRect(10,H-26,W-20,16);
+  cx.fillStyle='#7dff7d';cx.fillRect(12,H-24,(W-24)*p2,12);
+  TX('Level '+lvl,20,26,34,'#ffe34d','left');
+  TX('💎 '+crys,W-20,26,34,'#fff','right');
+  TX('❤️'.repeat(Math.max(0,shield))+'  Ship '+ship,W/2,H-52,30);
+  if(msgT>0&&st==='play')TX(msg,W/2,H/2,56,'#ffe34d');
+  if(st==='over'){
+    cx.fillStyle='rgba(0,0,0,.55)';cx.fillRect(0,0,W,H);
+    TX('GAME OVER',W/2,170,84,'#ff6b6b');
+    TX('You reached Level '+lvl+'  💎 '+crys,W/2,270,40);
+    E('😵‍💫',W/2,370,90,0);
+    TX('▶ Click to try again',W/2,480,44,'#7dff7d');
+  }
+  if(st==='win'){
+    TX('🎉 YOU WIN! 🎉',W/2,200,80,'#ffe34d');
+    TX('Zorp fell asleep. You are a space hero!',W/2,290,38);
+    E('👾',W/2,380,90,0);
+    TX('▶ Click to play again',W/2,480,44,'#7dff7d');
+  }
+}
+let last=performance.now();
+function loop(n){const dt=Math.min(0.05,(n-last)/1000);last=n;
+  if(gameVisible()){try{update(dt);draw();}catch(e){}}
+  requestAnimationFrame(loop);}
+requestAnimationFrame(loop);
+
+function showTab(n){
+  document.getElementById('gameWrap').style.display=n==='game'?'block':'none';
+  document.getElementById('shows').style.display=n==='shows'?'block':'none';
+  if(n==='shows')scene(0);
+  S(beep);
+}
+const SC=[
+ {cap:'🚀 Rockets zoom up to space super fast!',h:()=>{let s='';for(let i=0;i<30;i++)s+=`<div class="em" style="left:${Math.random()*95}%;top:${Math.random()*90}%;font-size:20px;animation:twk ${1+Math.random()*2}s infinite">⭐</div>`;
+   return s+'<div class="em" style="left:42%;bottom:20px;font-size:130px;animation:launch 3s ease-in infinite">🚀</div><div class="em" style="left:0;right:0;bottom:-10px;font-size:90px;text-align:center">☁️☁️☁️☁️☁️</div>';}},
+ {cap:'🪐 Planets travel around the Sun!',h:()=>`<div class="em" style="left:calc(50% - 60px);top:calc(50% - 60px);font-size:120px">☀️</div>
+   <div class="em" style="left:50%;top:50%;width:0;height:0;animation:orb 6s linear infinite"><span class="em" style="left:110px;top:-30px;font-size:60px">🌍</span></div>
+   <div class="em" style="left:50%;top:50%;width:0;height:0;animation:orb 11s linear infinite"><span class="em" style="left:190px;top:-35px;font-size:70px">🪐</span></div>
+   <div class="em" style="left:50%;top:50%;width:0;height:0;animation:orb 3.5s linear infinite"><span class="em" style="left:65px;top:-20px;font-size:40px">🌕</span></div>`},
+ {cap:'🌙 On the Moon you can jump super high!',h:()=>`<div class="em" style="left:20%;bottom:50px;font-size:110px;animation:hop 2s ease-in-out infinite">🧑‍🚀</div>
+   <div class="em" style="left:60%;bottom:50px;font-size:110px;animation:hop 2s ease-in-out .7s infinite">🧑‍🚀</div>
+   <div class="em" style="right:60px;top:30px;font-size:90px">🌍</div>
+   <div class="em" style="left:0;right:0;bottom:-30px;height:90px;background:#bbb;border-radius:50% 50% 0 0"></div>`}
+];
+function scene(i){
+  document.getElementById('scene').innerHTML=SC[i].h();
+  document.getElementById('cap').textContent=SC[i].cap;
+}
+scene(0);
+
+</script>
+</body>
+</html>
